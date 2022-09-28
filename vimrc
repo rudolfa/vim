@@ -22,7 +22,7 @@ syntax on
 set cursorline
 
 " Highlight cursor line underneath the cursor vertically.
-set cursorcolumn
+" set cursorcolumn
 
 " Show matching words during a search.
 "set showmatch
@@ -39,17 +39,25 @@ set smartindent
 filetype indent on
 set shiftwidth=2
 
+
+
+
+" ---------------------------------------
+" Customize leader key to SPC
+" ---------------------------------------
+nnoremap <space> <noop>
+let mapleader = ' '
+
 " ---------------------------------------
 " Enable folder based configuration
 " ---------------------------------------
-
 silent! so .vimlocal
 
 " Enable linenumbers
 set relativenumber
 " Enable current line number
 set number
- 
+
 " Enable auto completion menu after pressing TAB.
 " set wildmenu
 
@@ -66,12 +74,22 @@ set number
 
 " Load packager only when you need it
 function! PackagerInit() abort
-	packadd vim-packager
-	call packager#init()
-	call packager#add('kristijanhusak/vim-packager', { 'type': 'opt' })
+    packadd vim-packager
+    call packager#init()
+    call packager#add('kristijanhusak/vim-packager', { 'type': 'opt' })
 
-	" Loaded only fpr specific filetypes on demand
-	call packager#add('habamax/vim-asciidoctor' )
+    call packager#add('jremmen/vim-ripgrep')
+    call packager#add('junegunn/fzf.vim')
+
+    call packager#add('vimwiki/vimwiki')
+    
+    call packager#add('preservim/vim-markdown')
+
+    " Loaded only for specific filetypes on demand
+    call packager#add('habamax/vim-asciidoctor' )
+
+    call packager#add('yegappan/lsp')
+
 
 endfunction
 
@@ -82,12 +100,63 @@ command! -bar PackagerClean call PackagerInit() | call packager#clean()
 command! -bar PackagerStatus call PackagerInit() | call packager#status()
 
 
+" LSP Activation ----------------- {{{
+packadd lsp
+let lspServers = [
+  	\ { 
+  	\ 	'filetype': ['java'],
+	\	'path': '/home/andy/opt/lspserver/jdt-language-server-1.9.0-202203031534/bin/jdtls',
+	\	'args': ['-Declipse.application=org.eclipse.jdt.ls.core.id1',
+	\		'-Dosgi.bundles.defaultStartLevel=4',
+	\		'-Declipse.product=org.eclipse.jdt.ls.core.product',
+	\		'-Dlog.level=ALL',
+	\		'-noverify',
+	\		'-Xmx1G',
+	\		'--add-modules=ALL-SYSTEM',
+	\		'--add-opens java.base/java.util=ALL-UNNAMED',
+	\		'--add-opens java.base/java.lang=ALL-UNNAMED',
+	\		'-jar ./plugins/org.eclipse.equinox.launcher.gtk.linux.x86_64_1.2.400.v20211117-0650.jar',
+	\		'-configuration ./config_linux',
+	\		'-data /home/andy/dev/eclipse/ws'
+	\	]
+	\ }
+      \ ]
+call LspAddServer(lspServers)
+
+" }}}
+
+" Vimwiki Konfiguration ------------------------------------------------ {{{
+"
+let g:vimwiki_list = [{'path': '~/dev/wiki/', 'path_html': '~/public_html/', 'syntax': 'markdown', 'ext':'.md', 'links_space_char':'_'}]
+" let g:vimwiki_ext2syntax = { '.md':'markdown'}
+let g:vimwiki_markdown_link_ext = 1
+
+
+function! VimwikiLinkHandler(link)
+try
+  let browser = 'firefox'
+  execute browser a:link
+  return 1
+catch
+  echo "This can happen for a variety of reasons ..."
+endtry
+return 0
+endfunction
+" }}}
 
 " }}}
 
 " MAPPINGS --------------------------------------------------------------- {{{
 
 " Mappings code goes here.
+
+" edit my vimrc file
+nnoremap <leader>ev :vsplit $MYVIMRC<cr>
+" source my vimrc file
+nnoremap <leader>sv :source $MYVIMRC<cr>
+
+"Surround current word with quotes
+nnoremap <leader>" viw<esc>a"<esc>hbi"<esc>
 
 " }}}
 
@@ -100,6 +169,18 @@ augroup filetype_vim
   autocmd FileType vim setlocal foldmethod=marker
 augroup END
 
+
+" Erzeugt eine Zettelkastennotitzdatei
+function! SaveWithTS(directory) range
+  let dirname = "!mkdir -p " .. a:directory .. strftime("%Y/%m/%d/") 
+    silent execute dirname
+    execute "save " . a:directory . strftime("%Y/%m/%d/%H%M%S.adoc")
+    redraw!
+endfunction
+
+
+command! -nargs=0 Zkw call SaveWithTS('./notizen/')
+command! -nargs=+ Zkf :execute 'vimgrep /^:keywords:.*'.expand('<args>').'/ ./notizen/**/*.adoc'
 " More Vimscripts code goes here.
 
 " }}}
