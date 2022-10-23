@@ -102,25 +102,27 @@ command! -bar PackagerStatus call PackagerInit() | call packager#status()
 
 " LSP Activation ----------------- {{{
 packadd lsp
-let lspServers = [
-  	\ { 
-  	\ 	'filetype': ['java'],
-	\	'path': '/home/andy/opt/lspserver/jdt-language-server-1.9.0-202203031534/bin/jdtls',
-	\	'args': ['-Declipse.application=org.eclipse.jdt.ls.core.id1',
-	\		'-Dosgi.bundles.defaultStartLevel=4',
-	\		'-Declipse.product=org.eclipse.jdt.ls.core.product',
-	\		'-Dlog.level=ALL',
-	\		'-noverify',
-	\		'-Xmx1G',
-	\		'--add-modules=ALL-SYSTEM',
-	\		'--add-opens java.base/java.util=ALL-UNNAMED',
-	\		'--add-opens java.base/java.lang=ALL-UNNAMED',
-	\		'-jar ./plugins/org.eclipse.equinox.launcher.gtk.linux.x86_64_1.2.400.v20211117-0650.jar',
-	\		'-configuration ./config_linux',
-	\		'-data /home/andy/dev/eclipse/ws'
-	\	]
-	\ }
-      \ ]
+let javaLangserver = $HOME .. '/opt/lspserver/jdt-language-server-1.9.0-202203031534'
+let lspServers = [ 
+\	{ 
+\	'filetype': ['java'],
+\	'path': javaLangserver .. '/bin/jdtls',
+\	'args': ['-Declipse.application=org.eclipse.jdt.ls.core.id1',
+\		'-Dosgi.bundles.defaultStartLevel=4',
+\		'-Declipse.product=org.eclipse.jdt.ls.core.product',
+\		'-Dlog.level=ALL',
+\		'-noverify',
+\		'-Xmx1G',
+\		'--add-modules=ALL-SYSTEM',
+\		'--add-opens java.base/java.util=ALL-UNNAMED',
+\		'--add-opens java.base/java.lang=ALL-UNNAMED',
+\		'-jar', './plugins/org.eclipse.equinox.launcher.gtk.linux.x86_64_1.2.400.v20211117-0650.jar',
+\		'-data', $HOME .. '/dev/eclipse/ws',
+\		'-configuration', javaLangserver .. '/config_linux'
+\		],
+\	'syncInit': v:true
+\	}
+\ ]
 call LspAddServer(lspServers)
 
 " }}}
@@ -178,9 +180,17 @@ function! SaveWithTS(directory) range
     redraw!
 endfunction
 
-
+" = Zettelkasten Commands
+" Prerequisite: Textformat of notes is ASCIIDOC
+" Write a new note
 command! -nargs=0 Zkw call SaveWithTS('./notizen/')
-command! -nargs=+ Zkf :execute 'vimgrep /^:keywords:.*'.expand('<args>').'/ ./notizen/**/*.adoc'
+" Find note by keyword
+command! -nargs=+ Zkfk :execute 'lvimgrep /^:keywords:.*'.expand('<args>').'/j ./notizen/**/*.adoc'
+" Find note by title
+command! -nargs=+ Zkft :execute 'lvimgrep /^= .*'.expand('<args>').'/j ./notizen/**/*.adoc'
+" Find note by textbody
+command! -nargs=+ Zkfb :execute 'lvimgrep /.*'.expand('<args>').'/j ./notizen/**/*.adoc'
+
 " More Vimscripts code goes here.
 
 " }}}
