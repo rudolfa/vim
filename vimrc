@@ -103,6 +103,7 @@ command! -bar PackagerStatus call PackagerInit() | call packager#status()
 " LSP Activation ----------------- {{{
 packadd lsp
 let javaLangserver = $HOME .. '/opt/lspserver/jdt-language-server-1.9.0-202203031534'
+let workspaceDir = $HOME .. '/dev/eclipse'
 let lspServers = [ 
 \	{ 
 \	'filetype': ['java'],
@@ -116,8 +117,9 @@ let lspServers = [
 \		'--add-modules=ALL-SYSTEM',
 \		'--add-opens java.base/java.util=ALL-UNNAMED',
 \		'--add-opens java.base/java.lang=ALL-UNNAMED',
+\		'-javaagent:' .. workspaceDir .. '/libs/lombok.jar',
 \		'-jar', './plugins/org.eclipse.equinox.launcher.gtk.linux.x86_64_1.2.400.v20211117-0650.jar',
-\		'-data', $HOME .. '/dev/eclipse/ws',
+\		'-data', workspaceDir .. '/ws',
 \		'-configuration', javaLangserver .. '/config_linux'
 \		],
 \	'syncInit': v:true
@@ -159,6 +161,10 @@ nnoremap <leader>sv :source $MYVIMRC<cr>
 
 "Surround current word with quotes
 nnoremap <leader>" viw<esc>a"<esc>hbi"<esc>
+
+" Escape from insert mode
+inoremap jj <esc>
+
 
 " }}}
 
