@@ -40,6 +40,12 @@ filetype indent on
 set shiftwidth=2
 
 
+" ---------------------------------------
+" Indention
+" ---------------------------------------
+set wildmenu
+set wildoptions=pum
+
 
 
 " ---------------------------------------
@@ -82,8 +88,11 @@ function! PackagerInit() abort
     call packager#add('junegunn/fzf.vim')
 
     call packager#add('vimwiki/vimwiki')
-    
+  
     call packager#add('preservim/vim-markdown')
+
+    call packager#add('SirVer/ultisnips')
+    call packager#add('honza/vim-snippets')
 
     " Loaded only for specific filetypes on demand
     call packager#add('habamax/vim-asciidoctor' )
@@ -162,9 +171,24 @@ nnoremap <leader>sv :source $MYVIMRC<cr>
 "Surround current word with quotes
 nnoremap <leader>" viw<esc>a"<esc>hbi"<esc>
 
+nnoremap ü <C-]>
+
 " Escape from insert mode
 inoremap jj <esc>
 
+" ULTISNIPS ------------------------------ {{{
+let g:UltiSnipsExpandTrigger="<tab>"
+let g:UltiSnipsListSnippets="<C-ö>"
+
+let g:UltiSnipsJumpForwardTrigger="<c-b>"
+let g:UltiSnipsJumpBackwardTrigger="<c-z>"
+
+let g:UltiSnipsEnableSnipMate="0"
+
+" If you want :UltiSnipsEdit to split your window.
+let g:UltiSnipsEditSplit="vertical"
+
+" }}}
 
 " }}}
 
@@ -198,7 +222,36 @@ command! -nargs=+ Zkft :execute 'lvimgrep /^= .*'.expand('<args>').'/j ./notizen
 command! -nargs=+ Zkfb :execute 'lvimgrep /.*'.expand('<args>').'/j ./notizen/**/*.adoc'
 
 " More Vimscripts code goes here.
+" Jekyll based Zettelkasten
 
+function! SaveJekyllZettelkastenNote(directory) range
+  let mkDirname = "!mkdir -p " .. a:directory
+   silent execute mkDirname
+   execute "save " . a:directory . strftime("%Y-%m-%d-%H%M%S.adoc")
+   redraw!
+endfunction
+
+command! -nargs=0 JekyllZkSave call SaveJekyllZettelkastenNote('./content/collections/zettelkasten/_posts/')
+command! -nargs=+ JekyllZkFindKeywords :execute 'lvimgrep /^:keywords:.*'.expand('<args>').'/j ./content/collections/zettelkasten/**/*.adoc'
+command! -nargs=+ JekyllZkTitleSearch :execute 'lvimgrep /^= .*'.expand('<args>').'/j ./content/collections/zettelkasten/**/*.adoc'
+command! -nargs=+ JekyllZkFulltextSearch :execute 'lvimgrep /.*'.expand('<args>').'/j ./content/collections/zettelkasten/**/*.adoc'  
+command! -bang -nargs=? -complete=dir JekylZkPreviewlist call fzf#vim#files('content/collections/zettelkasten/_posts',fzf#vim#with_preview(),<bang>0)
+command! -nargs=1 JekyllZkPostUrl let @a = 'xref:{% page_url /zettelkasten/' . expand('%:t:r') . ' %}[' . expand('<args>') . ']'
+
+    command! -bang -nargs=* Rg
+"      \ call fzf#vim#grep(
+"      \   'rg --column --line-number --no-heading --color=always --smart-case -- '.shellescape(<q-args>), 1,
+"      \   fzf#vim#with_preview(), <bang>0)
+
+    function! RipgrepFzf(query, fullscreen)
+      let command_fmt = 'rg --column --line-number --no-heading --color=always --smart-case -- %s || true'
+      let initial_command = printf(command_fmt, shellescape(a:query))
+      let reload_command = printf(command_fmt, '{q}')
+      let spec = {'options': ['--phony', '--query', a:query, '--bind', 'change:reload:'.reload_command]}
+      call fzf#vim#grep(initial_command, 1, fzf#vim#with_preview(spec), a:fullscreen)
+    endfunction
+
+    command! -nargs=* -bang RG call RipgrepFzf(<q-args>, <bang>0)
 " }}}
 
 " STATUS LINE ------------------------------------------------------------ {{{

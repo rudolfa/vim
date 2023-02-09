@@ -13,6 +13,8 @@ nnoremap gD :LspGotoDeclaration<cr>
 nnoremap gt :LspGotoTypeDef<cr>
 " Goto Implementation
 nnoremap gi :LspGotoImpl<cr>
+" Perform a workspace wide search for a symbol
+nnoremap gS :LspSymbolSearch<cr>
 
 " Peek Definition
 nnoremap <leader>lpd :LspPeekDefinition<cr>
