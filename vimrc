@@ -77,7 +77,8 @@ set number
 " }}}
 
 " PLUGINS ---------------------------------------------------------------- {{{
-
+" Packager had to be installes first
+" git clone https://github.com/kristijanhusak/vim-packager ~/.vim/pack/packager/opt/vim-packager
 " Load packager only when you need it
 function! PackagerInit() abort
     packadd vim-packager
@@ -85,7 +86,7 @@ function! PackagerInit() abort
     call packager#add('kristijanhusak/vim-packager', { 'type': 'opt' })
 
     call packager#add('jremmen/vim-ripgrep')
-    call packager#add('junegunn/fzf.vim')
+    call packager#add('junegunn/fzf.vim', {'requires': ['junegunn/fzf'] })
 
     call packager#add('vimwiki/vimwiki')
   
@@ -108,8 +109,27 @@ command! -nargs=* -bar PackagerUpdate call PackagerInit() | call packager#update
 command! -bar PackagerClean call PackagerInit() | call packager#clean()
 command! -bar PackagerStatus call PackagerInit() | call packager#status()
 
+" Vim-Asciidoctor --------------- {{{
+
+" Function to create buffer local mappings and add default compiler
+let g:asciidoctor_folding = 1
+let g:asciidoctor_fold_options = 1
+let g:asciidoctor_opener = '!google-chrome-stable'
+fun! AsciidoctorMappings()
+  nnoremap <buffer> <leader>oo :AsciidoctorOpenRAW<CR>
+  nnoremap <buffer> <leader>p :AsciidoctorPasteImage<CR>
+endfun
+
+" Call AsciidoctorMappings for all `*.adoc` and `*.asciidoc` files
+augroup asciidoctor
+  au!
+  au BufEnter *.adoc call AsciidoctorMappings()
+augroup END
+
+" }}}
 
 " LSP Activation ----------------- {{{
+if exists('*lsp#LspAddServer')
 packadd lsp
 let javaLangserver = $HOME .. '/opt/lspserver/jdt-language-server-1.9.0-202203031534'
 let workspaceDir = $HOME .. '/dev/eclipse'
@@ -134,7 +154,8 @@ let lspServers = [
 \	'syncInit': v:true
 \	}
 \ ]
-call LspAddServer(lspServers)
+  call LspAddServer(lspServers)
+endif
 
 " }}}
 
@@ -201,6 +222,7 @@ augroup filetype_vim
   autocmd FileType vim setlocal foldmethod=marker
 augroup END
 
+" Zettelkasten Standalone ----------------------------------------------- {{{
 
 " Erzeugt eine Zettelkastennotitzdatei
 function! SaveWithTS(directory) range
@@ -221,6 +243,9 @@ command! -nargs=+ Zkft :execute 'lvimgrep /^= .*'.expand('<args>').'/j ./notizen
 " Find note by textbody
 command! -nargs=+ Zkfb :execute 'lvimgrep /.*'.expand('<args>').'/j ./notizen/**/*.adoc'
 
+" }}}
+
+" Zettelkasten and Jekyll ------------------------------------------------ {{{
 " More Vimscripts code goes here.
 " Jekyll based Zettelkasten
 
@@ -238,6 +263,9 @@ command! -nargs=+ JekyllZkFulltextSearch :execute 'lvimgrep /.*'.expand('<args>'
 command! -bang -nargs=? -complete=dir JekylZkPreviewlist call fzf#vim#files('content/collections/zettelkasten/_posts',fzf#vim#with_preview(),<bang>0)
 command! -nargs=1 JekyllZkPostUrl let @a = 'xref:{% page_url /zettelkasten/' . expand('%:t:r') . ' %}[' . expand('<args>') . ']'
 
+" }}}
+
+let g:fzf_layout = { 'window': { 'width': 0.9, 'height': 0.6 } }
     command! -bang -nargs=* Rg
 "      \ call fzf#vim#grep(
 "      \   'rg --column --line-number --no-heading --color=always --smart-case -- '.shellescape(<q-args>), 1,
@@ -252,6 +280,8 @@ command! -nargs=1 JekyllZkPostUrl let @a = 'xref:{% page_url /zettelkasten/' . e
     endfunction
 
     command! -nargs=* -bang RG call RipgrepFzf(<q-args>, <bang>0)
+"    }}}
+
 " }}}
 
 " STATUS LINE ------------------------------------------------------------ {{{
