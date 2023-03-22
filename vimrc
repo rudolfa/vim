@@ -1,7 +1,8 @@
-" Basic settings
-colorscheme industry
 
 " COMMON SETTINGS  ------------------------------------------------------- {{{
+
+" Basic settings
+colorscheme industry
 
 " Disable compatibility with vi which can cause unexpected issues.
 if &compatible
@@ -84,7 +85,7 @@ function! PackagerInit() abort
     packadd vim-packager
     call packager#init()
     call packager#add('kristijanhusak/vim-packager', { 'type': 'opt' })
-
+    call packager#add('tpope/vim-fugitive')
     call packager#add('jremmen/vim-ripgrep')
     call packager#add('junegunn/fzf.vim', {'requires': ['junegunn/fzf'] })
 
@@ -114,6 +115,7 @@ command! -bar PackagerStatus call PackagerInit() | call packager#status()
 " Function to create buffer local mappings and add default compiler
 let g:asciidoctor_folding = 1
 let g:asciidoctor_fold_options = 1
+let g:asciidoctor_fenced_languages = ['java', 'bash', 'javascript', 'xml']
 let g:asciidoctor_opener = '!google-chrome-stable'
 fun! AsciidoctorMappings()
   nnoremap <buffer> <leader>oo :AsciidoctorOpenRAW<CR>
@@ -192,7 +194,17 @@ nnoremap <leader>sv :source $MYVIMRC<cr>
 "Surround current word with quotes
 nnoremap <leader>" viw<esc>a"<esc>hbi"<esc>
 
-nnoremap ü <C-]>
+" Follow Link
+nnoremap ü <C-]>	
+
+" Easy junmps on german keyboard
+nmap ö [
+nmap öö [[
+nmap ä ]
+nmap ää ]]
+nmap öä []
+nmap äö ][
+
 
 " Escape from insert mode
 inoremap jj <esc>
@@ -243,6 +255,8 @@ command! -nargs=+ Zkft :execute 'lvimgrep /^= .*'.expand('<args>').'/j ./notizen
 " Find note by textbody
 command! -nargs=+ Zkfb :execute 'lvimgrep /.*'.expand('<args>').'/j ./notizen/**/*.adoc'
 
+command! -nargs=0 Zkyf let @a = expand('%')
+
 " }}}
 
 " Zettelkasten and Jekyll ------------------------------------------------ {{{
@@ -280,7 +294,6 @@ let g:fzf_layout = { 'window': { 'width': 0.9, 'height': 0.6 } }
     endfunction
 
     command! -nargs=* -bang RG call RipgrepFzf(<q-args>, <bang>0)
-"    }}}
 
 " }}}
 
