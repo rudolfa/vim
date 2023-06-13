@@ -42,7 +42,7 @@ set shiftwidth=2
 
 
 " ---------------------------------------
-" Indention
+" Show options in a popupmenu
 " ---------------------------------------
 set wildmenu
 set wildoptions=pum
@@ -296,6 +296,10 @@ let g:fzf_layout = { 'window': { 'width': 0.9, 'height': 0.6 } }
     command! -nargs=* -bang RG call RipgrepFzf(<q-args>, <bang>0)
 
 " }}}
+
+" Yaml ------------------------------------------------------------------- {{{
+autocmd FileType yaml setlocal ts=2 sts=2 sw=2 expandtab
+"  }}}
 
 " STATUS LINE ------------------------------------------------------------ {{{
 
