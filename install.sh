@@ -4,7 +4,7 @@
 
 VIMHOME=~/.vim-configs/main
 
-mkdir -p $VINHOME
+mkdir -p $VIMHOME
 
 warn() {
     echo "$1" >&2
@@ -19,11 +19,13 @@ die() {
 [ -e "~/.vim" ] && die "~/.vim already exists."
 [ -e "~/.vimrc" ] && die "~/.vimrc already exists."
 
-git clone git://github.com/rudolfa/vimrc.git "$VIMHOME"
+git clone https://github.com/rudolfa/vim.git "$VIMHOME"
 
 git clone https://github.com/kristijanhusak/vim-packager $VIMHOME/pack/packager/opt/vim-packager
 
-install -t ~/bin $VINHOME/bash/swim
+install -t ~/bin $VIMHOME/bash/swim
+
+swim main
 
 echo "add follwing line into your .bashrc and restart terminal session"
-echo "source $VINHOME/bash/swim-completition.bash"
+echo "source $VIMHOME/bash/swim-completition.bash"
