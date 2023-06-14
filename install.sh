@@ -1,8 +1,10 @@
 #!/bin/bash
 
-# This script installs vimrc and plugin manager of my choice.
+# This script installs vim and plugin manager of my choice.
 
-VIMHOME=~/.vim
+VIMHOME=~/.vim-configs/main
+
+mkdir -p $VINHOME
 
 warn() {
     echo "$1" >&2
@@ -21,4 +23,7 @@ git clone git://github.com/rudolfa/vimrc.git "$VIMHOME"
 
 git clone https://github.com/kristijanhusak/vim-packager $VIMHOME/pack/packager/opt/vim-packager
 
-ln -s $VINHOME/vimrc ~/.vimrc
+install -t ~/bin $VINHOME/bash/swim
+
+echo "add follwing line into your .bashrc and restart terminal session"
+echo "source $VINHOME/bash/swim-completition.bash"

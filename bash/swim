@@ -1,0 +1,10 @@
+#! /bin/bash
+
+if [ -z "$1" ]; then
+  echo "No argument available."
+  echo "You must choose a directory name from ~/.vim-configs"
+  exit 2
+fi
+
+echo "Swimming with $1"
+ln -snfv ~/.vim-configs/$1 ~/.vim
