@@ -85,7 +85,7 @@ function! PackagerInit() abort
     packadd vim-packager
     call packager#init()
     call packager#add('kristijanhusak/vim-packager', { 'type': 'opt' })
-    call packager#add('tpope/vim-fugitive')
+"    call packager#add('tpope/vim-fugitive')
     call packager#add('jremmen/vim-ripgrep')
     call packager#add('junegunn/fzf.vim', {'requires': ['junegunn/fzf'] })
 
@@ -98,7 +98,7 @@ function! PackagerInit() abort
 
     " Loaded only for specific filetypes on demand
     call packager#add('habamax/vim-asciidoctor' )
-
+	call packager#add('godlygeek/tabular')
     call packager#add('yegappan/lsp')
 
 
