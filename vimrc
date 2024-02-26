@@ -33,7 +33,7 @@ set cursorline
 
 
 " ---------------------------------------
-" Indention
+" Indention. See :h indent
 " ---------------------------------------
 set smartindent
 " Load an indent file for the detected file type.
@@ -47,13 +47,13 @@ set shiftwidth=2
 set wildmenu
 set wildoptions=pum
 
-
-
 " ---------------------------------------
 " Customize leader key to SPC
 " ---------------------------------------
-nnoremap <space> <noop>
-let mapleader = ' '
+nnoremap <Space> <Nop>
+let mapleader = " "
+
+"
 
 " ---------------------------------------
 " Enable folder based configuration
@@ -115,6 +115,7 @@ command! -bar PackagerStatus call PackagerInit() | call packager#status()
 " Function to create buffer local mappings and add default compiler
 let g:asciidoctor_folding = 1
 let g:asciidoctor_fold_options = 1
+let g:asciidoctor_foldtitle_as_h1 = 1
 let g:asciidoctor_fenced_languages = ['java', 'bash', 'javascript', 'xml']
 let g:asciidoctor_opener = '!google-chrome-stable'
 fun! AsciidoctorMappings()
@@ -197,7 +198,7 @@ nnoremap <leader>" viw<esc>a"<esc>hbi"<esc>
 " Follow Link
 nnoremap ü <C-]>	
 
-" Easy junmps on german keyboard
+" Easy jumps on german keyboard
 nmap ö [
 nmap öö [[
 nmap ä ]
@@ -207,7 +208,7 @@ nmap äö ][
 
 
 " Escape from insert mode
-inoremap jj <esc>
+inoremap jk <esc>
 
 " ULTISNIPS ------------------------------ {{{
 let g:UltiSnipsExpandTrigger="<tab>"
@@ -235,6 +236,8 @@ augroup filetype_vim
 augroup END
 
 " Zettelkasten Standalone ----------------------------------------------- {{{
+"
+let s:zkhome = "{zkhome}"
 
 " Erzeugt eine Zettelkastennotitzdatei
 function! SaveWithTS(directory) range
@@ -244,18 +247,50 @@ function! SaveWithTS(directory) range
     redraw!
 endfunction
 
+" Erstelle einen Zettelkastenlink
+function! s:CreateZkLink()
+  norm! gg/^= <cr>
+  norm! wv$h"by
+  let @a = 'xref:' . s:zkhome . expand('%') . '[' . expand(@b) . ']'
+endfunction
+
+
 " = Zettelkasten Commands
 " Prerequisite: Textformat of notes is ASCIIDOC
 " Write a new note
-command! -nargs=0 Zkw call SaveWithTS('./notizen/')
+command! -nargs=0 ZkWrite call SaveWithTS('./notizen/')
 " Find note by keyword
-command! -nargs=+ Zkfk :execute 'lvimgrep /^:keywords:.*'.expand('<args>').'/j ./notizen/**/*.adoc'
+command! -nargs=+ ZkSearchKeyword :execute 'lvimgrep /^:keywords:.*'.expand('<args>').'/j ./notizen/**/*.adoc'
 " Find note by title
-command! -nargs=+ Zkft :execute 'lvimgrep /^= .*'.expand('<args>').'/j ./notizen/**/*.adoc'
+command! -nargs=+ ZkSearchTitle :execute 'lvimgrep /^= .*'.expand('<args>').'/j ./notizen/**/*.adoc'
 " Find note by textbody
-command! -nargs=+ Zkfb :execute 'lvimgrep /.*'.expand('<args>').'/j ./notizen/**/*.adoc'
+command! -nargs=+ ZkSearchBody :execute 'lvimgrep /.*'.expand('<args>').'/j ./notizen/**/*.adoc'
+" Stellt einen internen Verweis im Register a für diese Datei zu Verfügung
+command! -nargs=0 Zklink call s:CreateZkLink()
+" Suche alle Zettel, die auf diesen verweisen
+command! -nargs=0 Zkbacklink :execute 'lvimgrep '. @a .' ./notizen/**/*.adoc'
 
-command! -nargs=0 Zkyf let @a = expand('%')
+command! -bang -nargs=* ZkList
+  \ let spec = {'dir': $ZETTELKASTEN_HOME, 'options': '+s -d : --with-nth 3..'} |
+  \ call fzf#vim#grep(
+  \   "grep -rn '^= ' $ZETTELKASTEN_HOME/notizen  | sed s/:=\\ /:/g ",
+  \   fzf#vim#with_preview(spec,'right','ctrl-/'), <bang>0)
+
+
+" Suche alle Zettel ohne Verweise
+command! -bang -nargs=* ZkNolinks
+  \ let spec = {'dir': $ZETTELKASTEN_HOME, 'options': '+s -d : --with-nth 3..'} |
+  \ call fzf#vim#grep(
+  \   "$ZETTELKASTEN_HOME/seachForNotesWithoutLinks.sh",
+  \   fzf#vim#with_preview(spec,'right','ctrl-/'), <bang>0)
+
+command! -bang -nargs=0 ZkNodeWithoutKeywords
+  \ let spec = {'dir': $ZETTELKASTEN_HOME, 'options': '+s -d : --with-nth 3..'} |
+  \ call fzf#vim#grep(
+  \   "$ZETTELKASTEN_HOME/seachForNotesWithoutKeywordsAndLinks.sh",
+  \   fzf#vim#with_preview(spec,'right','ctrl-/'), <bang>0)
+
+
 
 " }}}
 
@@ -301,8 +336,11 @@ let g:fzf_layout = { 'window': { 'width': 0.9, 'height': 0.6 } }
 autocmd FileType yaml setlocal ts=2 sts=2 sw=2 expandtab
 "  }}}
 
+" asciidoctor ------------------------------------------------------------ {{{
+" autocmd FileType asciidoctor setlocal grepprg="grep -n $*"
+" }}}
+
 " STATUS LINE ------------------------------------------------------------ {{{
 
 " Status bar code goes here.
-
-" }}}
+ " }}}
