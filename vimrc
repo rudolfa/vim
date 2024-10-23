@@ -2,7 +2,7 @@
 " COMMON SETTINGS  ------------------------------------------------------- {{{
 
 " Basic settings
-colorscheme industry
+colorscheme koehler
 
 " Disable compatibility with vi which can cause unexpected issues.
 if &compatible
@@ -38,7 +38,12 @@ set cursorline
 set smartindent
 " Load an indent file for the detected file type.
 filetype indent on
-set shiftwidth=2
+" Used by >
+set shiftwidth=4
+" Show tabs by 4 spaces
+set tabstop=4
+" Pressing tab inserts 4 spaces
+set expandtab		
 
 
 " ---------------------------------------
@@ -206,6 +211,12 @@ nmap ää ]]
 nmap öä []
 nmap äö ][
 
+" Workaround for braces
+inoremap öö [
+inoremap ää ]
+inoremap ÖÖ {
+inoremap ÄÄ }
+
 
 " Escape from insert mode
 inoremap jk <esc>
@@ -254,40 +265,54 @@ function! s:CreateZkLink()
   let @a = 'xref:' . s:zkhome . expand('%') . '[' . expand(@b) . ']'
 endfunction
 
+" Erstelle einen relativen Zettelkastenlink
+" Suche Titlezeile
+" Kopiere Titel ins Register b
+" Erstelle link im Register a
+function! s:CreateRelativeZkLink()
+  norm! gg/^= <cr>
+  norm! wv$h"by
+  let @a = 'xref:' . '../../../../' . expand('%') . '[' . expand(@b) . ']'
+endfunction
+
 
 " = Zettelkasten Commands
 " Prerequisite: Textformat of notes is ASCIIDOC
 " Write a new note
-command! -nargs=0 ZkWrite call SaveWithTS('./notizen/')
+command! -nargs=0 ZkWrite call SaveWithTS('$ZETTELKASTEN_HOME/notizen/')
 " Find note by keyword
-command! -nargs=+ ZkSearchKeyword :execute 'lvimgrep /^:keywords:.*'.expand('<args>').'/j ./notizen/**/*.adoc'
+command! -nargs=+ ZkSearchKeyword :execute 'lvimgrep /^:keywords:.*'.expand('<args>').'/j $ZETTELKASTEN_HOME/notizen/**/*.adoc'
 " Find note by title
-command! -nargs=+ ZkSearchTitle :execute 'lvimgrep /^= .*'.expand('<args>').'/j ./notizen/**/*.adoc'
+command! -nargs=+ ZkSearchTitle :execute 'lvimgrep /^= .*'.expand('<args>').'/j  $ZETTELKASTEN_HOME/notizen/**/*.adoc'
 " Find note by textbody
-command! -nargs=+ ZkSearchBody :execute 'lvimgrep /.*'.expand('<args>').'/j ./notizen/**/*.adoc'
+command! -nargs=+ ZkSearchBody :execute 'lvimgrep /.*'.expand('<args>').'/j $ZETTELKASTEN_HOME/notizen/**/*.adoc'
 " Stellt einen internen Verweis im Register a für diese Datei zu Verfügung
-command! -nargs=0 Zklink call s:CreateZkLink()
+command! -nargs=0 ZkPrepareBacklinkName call s:CreateZkLink()
+" Stellt einen relativen internen Verweis im Register a für dies Datei zur Verfügung
+command! -nargs=0 ZkPrepareRelativeBacklinkname call s:CreateRelativeZkLink()
 " Suche alle Zettel, die auf diesen verweisen
-command! -nargs=0 Zkbacklink :execute 'lvimgrep '. @a .' ./notizen/**/*.adoc'
+command! -nargs=0 ZkSearchBacklinkNotes call s:CreateZkLink() | :execute 'lvimgrep '. matchstr(@a,'}\zs.*\ze[') .' $ZETTELKASTEN_HOME/notizen/**/*.adoc'
 
-command! -bang -nargs=* ZkList
-  \ let spec = {'dir': $ZETTELKASTEN_HOME, 'options': '+s -d : --with-nth 3..'} |
+command! -bang -nargs=* ZkListNotes
+  \ let spec = {'dir': $ZETTELKASTEN_HOME, 'options': '--tac +s -d : --with-nth 3..'} |
   \ call fzf#vim#grep(
   \   "grep -rn '^= ' $ZETTELKASTEN_HOME/notizen  | sed s/:=\\ /:/g ",
   \   fzf#vim#with_preview(spec,'right','ctrl-/'), <bang>0)
 
 
 " Suche alle Zettel ohne Verweise
-command! -bang -nargs=* ZkNolinks
-  \ let spec = {'dir': $ZETTELKASTEN_HOME, 'options': '+s -d : --with-nth 3..'} |
+command! -bang -nargs=* ZkListNolinkNotes
+  \ let spec = {'dir': $ZETTELKASTEN_HOME, 'options': '--tac +s -d : --with-nth 3..'} |
   \ call fzf#vim#grep(
-  \   "$ZETTELKASTEN_HOME/seachForNotesWithoutLinks.sh",
+  \   "$ZETTELKASTEN_HOME/searchForNotesWithoutLinks.sh",
   \   fzf#vim#with_preview(spec,'right','ctrl-/'), <bang>0)
 
-command! -bang -nargs=0 ZkNodeWithoutKeywords
-  \ let spec = {'dir': $ZETTELKASTEN_HOME, 'options': '+s -d : --with-nth 3..'} |
+" Liste alle Zettel auf, die kein Schlagwort und auch keine internen Verweise
+" enthalten
+command! -bang -nargs=0 ZkListNoKeywordAndLinkNotes
+  \ let spec = {'dir': $ZETTELKASTEN_HOME, 'options': '--tac +s -d : --with-nth 3..'} |
   \ call fzf#vim#grep(
-  \   "$ZETTELKASTEN_HOME/seachForNotesWithoutKeywordsAndLinks.sh",
+  \   "$ZETTELKASTEN_HOME/searchForNotesWithoutKeywordsAndLinks.sh",
   \   fzf#vim#with_preview(spec,'right','ctrl-/'), <bang>0)
 
 
