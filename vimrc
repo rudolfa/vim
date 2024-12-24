@@ -272,7 +272,7 @@ endfunction
 function! s:CreateRelativeZkLink()
   norm! gg/^= <cr>
   norm! wv$h"by
-  let @a = 'xref:' . '../../../../' . expand('%') . '[' . expand(@b) . ']'
+  let @a = 'xref:' . expand('%') . '[' . expand(@b) . ']'
 endfunction
 
 
@@ -340,7 +340,7 @@ command! -nargs=1 JekyllZkPostUrl let @a = 'xref:{% page_url /zettelkasten/' . e
 " }}}
 
 let g:fzf_layout = { 'window': { 'width': 0.9, 'height': 0.6 } }
-    command! -bang -nargs=* Rg
+"    command! -bang -nargs=* Rg
 "      \ call fzf#vim#grep(
 "      \   'rg --column --line-number --no-heading --color=always --smart-case -- '.shellescape(<q-args>), 1,
 "      \   fzf#vim#with_preview(), <bang>0)
@@ -357,8 +357,62 @@ let g:fzf_layout = { 'window': { 'width': 0.9, 'height': 0.6 } }
 
 " }}}
 
+" Search with Rg ------------------------------------------------------------------- {{{
+command! -bang -nargs=* Rg
+      \ call fzf#vim#grep(
+      \   'rg --column --line-number --no-heading --color=always --ignore-case '.shellescape(<q-args>), 1,
+      \   <bang>0 ? fzf#vim#with_preview('up:60%')
+      \           : fzf#vim#with_preview('right:50%:hidden', '?'),
+      \   <bang>0)
+
+nnoremap <C-p>a :Rg 
+" }}}
+
+" Insert Link ------------------------------------------------------------------- {{{
+augroup zettelkasten_group
+    autocmd!
+    autocmd BufRead,BufNewFile $ZETTELKASTEN_HOME/notizen/**.adoc inoremap <expr> ## fzf#vim#complete({
+            \ 'source': 'rg --line-number --no-heading --ignore-case --max-count 1  "^=.*" \| sort -t: -k3',
+            \ 'options': '-d ":1:=" --with-nth 2.. --prompt "ZettelkastenLink> "',
+            \ 'reducer': {l->"xref:../../../".split(l[0],':')[0] ."[".split(l[0],'=')[1]."]" },
+            \ 'window': {'width': 0.5, 'height': 0.5 }})
+augroup END
+
+" }}}
+
+" Zettelkasten Bufferlist ---------------------------------------------------- {{{
+
+function! CustomBufferList()
+    for buf in range(1, bufnr('$'))
+        if bufexists(buf)
+            " Hole den Buffernamen
+            let bufname = bufname(buf)
+            if bufname == ''
+                let firstline = ''
+            elseif bufloaded(buf)
+                let firstline = getbufoneline(buf,1)
+            else
+                let filecontent = readfile(bufname,'',1)
+                if empty(filecontent)
+                    let firstline = '[Empty File]'
+                else
+                    let firstline = readfile(bufname)[0]
+                endif
+            endif
+            " Formatiere die Ausgabe
+            echo printf('%3d: %s | %s', buf, bufname == '' ? '[No Name]' : bufname, firstline)
+        endif
+    endfor
+endfunction
+
+command! -bang -nargs=0 Ls call CustomBufferList()
+" ---- }}}
+
 " Yaml ------------------------------------------------------------------- {{{
-autocmd FileType yaml setlocal ts=2 sts=2 sw=2 expandtab
+augroup yaml_group
+    autocmd!
+    autocmd FileType yaml setlocal ts=2 sts=2 sw=2 expandtab
+augroup END
 "  }}}
 
 " asciidoctor ------------------------------------------------------------ {{{
