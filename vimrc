@@ -2,7 +2,7 @@
 " COMMON SETTINGS  ------------------------------------------------------- {{{
 
 " Basic settings
-colorscheme koehler
+colorscheme murphy
 
 " Disable compatibility with vi which can cause unexpected issues.
 if &compatible
@@ -369,13 +369,28 @@ nnoremap <C-p>a :Rg
 " }}}
 
 " Insert Link ------------------------------------------------------------------- {{{
+function! ZettelkastenReducer(line)
+    let note_path = $ZETTELKASTEN_HOME . "/notizen"
+    let file_path = split(a:line[0], ':')[0]
+    let title = split(a:line[0], '=')[1]
+    let relative_path = substitute(file_path, note_path, "", "")
+    return "xref:../../.." . relative_path . "[" . title . "]"
+endfunction
+
 augroup zettelkasten_group
     autocmd!
     autocmd BufRead,BufNewFile $ZETTELKASTEN_HOME/notizen/**.adoc inoremap <expr> ## fzf#vim#complete({
-            \ 'source': 'rg --line-number --no-heading --ignore-case --max-count 1  "^=.*" \| sort -t: -k3',
+            \ 'source': 'rg --line-number --no-heading --ignore-case --max-count 1  "^=.*" $ZETTELKASTEN_HOME/notizen \| sort -t: -k3',
             \ 'options': '-d ":1:=" --with-nth 2.. --prompt "ZettelkastenLink> "',
-            \ 'reducer': {l->"xref:../../../".split(l[0],':')[0] ."[".split(l[0],'=')[1]."]" },
+            \ 'reducer': function('ZettelkastenReducer'),
             \ 'window': {'width': 0.5, 'height': 0.5 }})
+
+autocmd BufRead,BufNewFile $ZETTELKASTEN_HOME/notizen/**.adoc inoremap <expr> <C-q> fzf#vim#complete({
+            \ 'source': 'find $ZETTELKASTEN_HOME/quellen -type f',
+            \ 'options': '--prompt "Quelle> "',
+            \ 'reducer': { l->substitute(l[0], getenv('ZETTELKASTEN_HOME') . "/quellen/", "", "")},
+            \ 'window':  {'width': 0.5, 'height': 0.5 }})
+
 augroup END
 
 " }}}
