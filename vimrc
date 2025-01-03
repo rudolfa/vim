@@ -397,21 +397,41 @@ augroup END
 
 " Zettelkasten Bufferlist ---------------------------------------------------- {{{
 
+function! GetFirstHeaderText(bufno)
+    for line in range(1,line('$',bufwinid(a:bufno)))
+        let current_line = getbufline(a:bufno,line)[0]
+        if current_line =~ '^= '
+            return substitute(current_line,'^= ', '','')
+        endif
+    endfor
+    return '' " Keinen Treffer
+endfunction
+
+function! GetFirstHeaderFromList(lines)
+    for current_line in a:lines
+        if current_line =~ '^= '
+            return substitute(current_line,'^= ', '','')
+        endif
+    endfor
+    return '' " Keinen Treffer
+endfunction
+    
+
 function! CustomBufferList()
     for buf in range(1, bufnr('$'))
-        if bufexists(buf)
+        if bufexists(buf) && buflisted(buf)
             " Hole den Buffernamen
             let bufname = bufname(buf)
             if bufname == ''
                 let firstline = ''
             elseif bufloaded(buf)
-                let firstline = getbufoneline(buf,1)
+                let firstline = GetFirstHeaderText(buf)
             else
-                let filecontent = readfile(bufname,'',1)
+                let filecontent = readfile(bufname)
                 if empty(filecontent)
                     let firstline = '[Empty File]'
                 else
-                    let firstline = readfile(bufname)[0]
+                    let firstline = GetFirstHeaderFromList(filecontent)
                 endif
             endif
             " Formatiere die Ausgabe
